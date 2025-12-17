@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>裁判登录 - 比赛管理系统</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/element-plus/2.3.12/index.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+        }
+        .login-card {
+            width: 400px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 20px;
+        }
+        .login-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #409EFF;
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .register-area {
+            margin-top: 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-card class="login-card" shadow="always">
+        <div class="login-title">
+            <el-icon><Trophy /></el-icon>
+            比赛系统登录
+        </div>
+
+        <el-form size="large">
+            <el-form-item>
+                <el-input v-model="username" placeholder="请输入用户名 (admin)" :prefix-icon="User"></el-input>
+            </el-form-item>
+
+            <el-form-item>
+                <el-input v-model="password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password @keyup.enter="handleLogin"></el-input>
+            </el-form-item>
+
+            <el-button type="primary" style="width: 100%; font-weight: bold; font-size: 16px;" @click="handleLogin" :loading="loading" round>
+                立即登录
+            </el-button>
+        </el-form>
+
+        <div class="register-area">
+            <span style="color: #909399; font-size: 14px;">还没有账号？</span>
+            <el-button type="primary" link @click="gotoRegister">点击注册</el-button>
+        </div>
+    </el-card>
+</div>
+
+<script src="https://cdn.staticfile.org/vue/3.3.4/vue.global.js"></script>
+<script src="https://cdn.staticfile.org/element-plus/2.3.12/index.full.js"></script>
+<script src="https://cdn.staticfile.org/element-plus-icons-vue/2.1.0/index.min.js"></script>
+
+<script>
+    const { createApp, ref } = Vue;
+    const { User, Lock, Trophy } = ElementPlusIconsVue; // 解构图标
+
+    const app = createApp({
+        setup() {
+            const username = ref('');
+            const password = ref('');
+            const loading = ref(false);
+
+            // 跳转注册页
+            const gotoRegister = () => {
+                window.location.href = 'register.html';
+            };
+
+            // 处理登录
+            const handleLogin = async () => {
+                if(!username.value || !password.value) {
+                    ElementPlus.ElMessage.warning('请输入账号和密码');
+                    return;
+                }
+
+                loading.value = true;
+                try {
+                    const response = await fetch(`/api/login?username=${username.value}&password=${password.value}`, { method: 'POST' });
+                    const result = await response.text();
+
+                    if (result === 'success') {
+                        // 🟢 核心：登录成功，存入 Session 作为通行证
+                        sessionStorage.setItem('match_user', username.value);
+
+                        ElementPlus.ElMessage.success('登录成功！正在进入系统...');
+                        // 1秒后跳转
+                        setTimeout(() => window.location.href = 'menu.html', 1000);
+                    } else {
+                        ElementPlus.ElMessage.error('账号或密码错误');
+                    }
+                } catch (e) {
+                    ElementPlus.ElMessage.error('连接服务器失败，请检查网络');
+                } finally {
+                    loading.value = false;
+                }
+            };
+
+            return { username, password, loading, handleLogin, gotoRegister, User, Lock, Trophy };
+        }
+    });
+
+    app.use(ElementPlus);
+    app.mount('#app');
+</script>
+</body>
+</html>

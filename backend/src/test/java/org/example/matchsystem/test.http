@@ -1,0 +1,17 @@
+### 添加第一个球员
+POST http://localhost:8080/api/players?name=张三
+
+### 添加第二个球员
+POST http://localhost:8080/api/players?name=李四
+
+### 开始一场新比赛 (张三 vs 李四, 决赛)
+POST http://127.0.0.1:8080/api/matches/start?playerAId=1&playerBId=2&level=决赛
+
+### 第一回合：张三得分
+POST http://127.0.0.1:8080/api/matches/1/score?winnerId=1
+
+### 第二回合：张三又得分
+POST http://127.0.0.1:8080/api/matches/1/score?winnerId=1
+
+### 第三回合：李四扳回一城 (李四ID是2)
+POST http://127.0.0.1:8080/api/matches/1/score?winnerId=2

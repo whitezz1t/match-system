@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>选手列表</title>
+    <script>
+        // 检查 sessionStorage 里有没有我们的“通行证”
+        const user = sessionStorage.getItem('match_user');
+        if (!user) {
+            // 如果没有，直接把人踢回登录页
+            alert("您尚未登录，请先登录！");
+            window.location.href = 'login.html';
+        }
+    </script>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; padding: 40px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #007bff; color: white; }
+        tr:hover { background-color: #f5f5f5; }
+
+        .back-btn { display: inline-block; margin-bottom: 20px; text-decoration: none; color: #007bff; font-weight: bold; }
+        .add-btn { float: right; background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="menu.html" class="back-btn">← 返回主菜单</a>
+    <button class="add-btn" onclick="addPlayer()">+ 添加新选手</button>
+    <h1>👥 参赛选手列表</h1>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>姓名</th>
+            <th>头像</th>
+        </tr>
+        </thead>
+        <tbody id="playerTableBody">
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // 1. 页面加载时，去后端拿数据
+    async function loadPlayers() {
+        const response = await fetch('/api/players');
+        const players = await response.json();
+
+        const tbody = document.getElementById('playerTableBody');
+        tbody.innerHTML = ''; // 清空旧数据
+
+        players.forEach(p => {
+            const row = `
+                    <tr>
+                        <td>${p.playerId}</td>
+                        <td><strong>${p.name}</strong></td>
+                        <td>${p.avatar ? '<img src="' + p.avatar + '" width="30">' : '暂无'}</td>
+                    </tr>
+                `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // 2. 简单的添加功能
+    async function addPlayer() {
+        const name = prompt("请输入新选手的名字：");
+        if (name) {
+            await fetch(`/api/players?name=${name}`, { method: 'POST' });
+            loadPlayers(); // 刷新列表
+        }
+    }
+
+    // 启动加载
+    loadPlayers();
+</script>
+</body>
+</html>

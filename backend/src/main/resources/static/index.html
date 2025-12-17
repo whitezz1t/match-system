@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>比赛实时计分系统</title>
+  <script>
+    // 检查 sessionStorage 里有没有我们的“通行证”
+    const user = sessionStorage.getItem('match_user');
+    if (!user) {
+      // 如果没有，直接把人踢回登录页
+      alert("您尚未登录，请先登录！");
+      window.location.href = 'login.html';
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    /* 简单写点样式，让界面好看点 */
+    body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; text-align: center; padding-top: 50px; }
+    .card { background: white; width: 600px; margin: 0 auto; padding: 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h1 { color: #333; margin-bottom: 30px; }
+
+    .scoreboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+    .player { width: 45%; }
+    .player-name { font-size: 24px; color: #555; font-weight: bold; margin-bottom: 10px; }
+    .score { font-size: 80px; color: #d9534f; font-weight: bold; line-height: 1; }
+    .vs { font-size: 30px; color: #ccc; font-style: italic; }
+
+    .controls { display: flex; justify-content: space-around; }
+    .btn { padding: 15px 30px; font-size: 18px; color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+    .btn-blue { background-color: #007bff; }
+    .btn-blue:hover { background-color: #0056b3; }
+    .btn-green { background-color: #28a745; }
+    .btn-green:hover { background-color: #218838; }
+
+    .info { margin-top: 20px; color: #888; font-size: 14px; }
+    input { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🏆 比赛实时计分板</h1>
+
+  <div style="margin-bottom: 20px;">
+    <label>当前比赛ID: </label>
+    <input type="number" id="matchIdInput" value="1" style="width: 50px;">
+    <button onclick="loadMatchInfo()" style="padding: 5px 10px;">刷新比赛信息</button>
+  </div>
+
+  <div class="scoreboard">
+    <div class="player">
+      <div class="player-name" id="nameA">选手A</div>
+      <div class="score" id="scoreA">0</div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="player">
+      <div class="player-name" id="nameB">选手B</div>
+      <div class="score" id="scoreB">0</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-blue" onclick="addScore('A')">选手A 得分 +1</button>
+    <button class="btn btn-green" onclick="addScore('B')">选手B 得分 +1</button>
+  </div>
+
+  <div class="info">状态: <span id="status">连接中...</span></div>
+  <div id="scoreChart" style="width: 100%; height: 300px; margin-top: 30px;"></div>
+</div>
+
+<script>
+  // 全局变量
+  let currentMatch = null;
+
+  // 1. 加载比赛基本信息
+  async function loadMatchInfo() {
+    // 1. 先看看网址栏里有没有 ?id=xxx
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlMatchId = urlParams.get('id');
+
+    // 如果网址有ID，就优先用网址的，否则用输入框的
+    const matchId = urlMatchId || document.getElementById('matchIdInput').value;
+
+    // 把输入框的值也更新一下
+    document.getElementById('matchIdInput').value = matchId;
+    try {
+      // 调用后端接口获取所有比赛，这里简单处理，遍历找到对应ID
+      // 实际开发中应该写一个 getMatchById 的接口
+      const response = await fetch('/api/matches');
+      const matches = await response.json();
+      const match = matches.find(m => m.matchId == matchId);
+
+      if (match) {
+        currentMatch = match;
+        document.getElementById('nameA').innerText = match.playerAName;
+        document.getElementById('nameB').innerText = match.playerBName;
+        updateScoreDisplay(match.finalScoreA, match.finalScoreB);
+        document.getElementById('status').innerText = "比赛进行中 (实时同步)";
+      } else {
+        alert("找不到ID为 " + matchId + " 的比赛，请先创建比赛！");
+      }
+    } catch (e) {
+      console.error(e);
+      document.getElementById('status').innerText = "连接服务器失败";
+    }
+  }
+
+  // 2. 更新页面上的数字
+  function updateScoreDisplay(scoreA, scoreB) {
+    document.getElementById('scoreA').innerText = scoreA;
+    document.getElementById('scoreB').innerText = scoreB;
+    // 每次更新分数时，顺便重绘图表
+    if(currentMatch) updateChart(currentMatch.matchId);
+  }
+
+  // 3. 记分功能 (核心)
+  async function addScore(who) {
+    if (!currentMatch) {
+      alert("请先加载比赛信息！");
+      return;
+    }
+
+    const matchId = currentMatch.matchId;
+    // 判断是谁赢了，获取对应的 ID
+    const winnerId = (who === 'A') ? currentMatch.playerAId : currentMatch.playerBId;
+
+    try {
+      // 发送 POST 请求给后端
+      const response = await fetch(`/api/matches/${matchId}/score?winnerId=${winnerId}`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        const updatedMatch = await response.json();
+        // 更新界面
+        updateScoreDisplay(updatedMatch.finalScoreA, updatedMatch.finalScoreB);
+        // 简单动画效果
+        const scoreEl = document.getElementById(who === 'A' ? 'scoreA' : 'scoreB');
+        scoreEl.style.transform = "scale(1.2)";
+        setTimeout(() => scoreEl.style.transform = "scale(1)", 200);
+      } else {
+        alert("记分失败！");
+      }
+    } catch (e) {
+      console.error("网络错误", e);
+    }
+  }
+
+  // 4. 自动刷新 (轮询) - 每2秒去问一下后端最新比分
+  // 这样如果别人在另一个网页记分，你这里也能看到变化
+  setInterval(async () => {
+    const matchId = document.getElementById('matchIdInput').value;
+    if(!matchId) return;
+
+    const response = await fetch('/api/matches');
+    const matches = await response.json();
+    const match = matches.find(m => m.matchId == matchId);
+    if (match) {
+      updateScoreDisplay(match.finalScoreA, match.finalScoreB);
+      updateChart(match.matchId);
+    }
+  }, 2000); // 2000毫秒 = 2秒
+
+  // 5. 初始化图表
+  let myChart = echarts.init(document.getElementById('scoreChart'));
+
+  async function updateChart(matchId) {
+    // 获取后端的所有回合数据
+    const response = await fetch(`/api/matches/${matchId}/rounds`);
+    const rounds = await response.json();
+
+    // 准备图表数据
+    // x轴：回合数 (1, 2, 3...)
+    const roundsAxis = rounds.map(r => r.roundNumber);
+    // y轴数据：选手A的得分变化
+    const dataA = rounds.map(r => r.scoreA);
+    // y轴数据：选手B的得分变化
+    const dataB = rounds.map(r => r.scoreB);
+
+    // ECharts 配置项
+    const option = {
+      title: { text: '比赛得分走势图' },
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['选手A', '选手B'] },
+      xAxis: { type: 'category', data: roundsAxis, name: '回合' },
+      yAxis: { type: 'value', name: '得分', minInterval: 1 },
+      series: [
+        { name: '选手A', type: 'line', data: dataA, smooth: true, color: '#007bff' },
+        { name: '选手B', type: 'line', data: dataB, smooth: true, color: '#28a745' }
+      ]
+    };
+
+    // 画图！
+    myChart.setOption(option);
+  }
+
+  // 页面一打开就尝试加载默认比赛
+  loadMatchInfo();
+</script>
+</body>
+</html>
