@@ -1,0 +1,33 @@
+# --- 1. 核心忽略 (绝对不能传) ---
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# --- 2. 后端 (Java/Spring Boot) ---
+target/
+*.class
+*.jar
+*.war
+logs/
+*.log
+
+# --- 3. 前端 (Vue/Node) ---
+frontend/node_modules/
+frontend/dist/
+frontend/npm-debug.log*
+frontend/yarn-error.log*
+
+# --- 4. 视频数据 (保护隐私 & 节省空间) ---
+# 这一行非常重要！防止把你测试录制的视频传上去
+videos/
+*.webm
+*.mp4
+
+# --- 5. 敏感配置 ---
+# 如果你的 .env 里写了真实的云服务 Key，请把下面这行取消注释
+# .env
+
+# --- 6. 数据库数据 ---
+# 如果你使用了 docker 的挂载卷在本地生成了数据文件夹
+mysql_data/
