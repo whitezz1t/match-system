@@ -43,11 +43,7 @@
       </el-header>
 
       <el-main class="main-content">
-        <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
-            <component :is="Component" />
-          </transition>
-        </router-view>
+        <router-view />
       </el-main>
     </el-container>
   </el-container>
@@ -92,8 +88,4 @@ const handleLogout = () => {
 
 /* 主体内容区样式 */
 .main-content { background-color: #f0f2f5; padding: 20px; }
-
-/* 简单的页面切换动画 */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

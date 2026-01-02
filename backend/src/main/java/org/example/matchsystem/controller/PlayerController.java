@@ -27,4 +27,17 @@ public class PlayerController {
     public List<Player> getAllPlayers() {
         return playerService.getAllPlayers();
     }
+
+
+    // 3. [新增] 删除选手接口 (DELETE)
+    @DeleteMapping("/{id}")
+    public void deletePlayer(@PathVariable Integer id) {
+        playerService.deletePlayer(id);
+    }
+
+    // 4. [新增] 修改选手接口 (PUT)
+    @PutMapping("/{id}")
+    public Player updatePlayer(@PathVariable Integer id, @RequestParam String name) {
+        return playerService.updatePlayer(id, name);
+    }
 }

@@ -3,6 +3,7 @@ package org.example.matchsystem.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.Date; // 引入 Date，为了兼容性
 
 @Data
 @Entity
@@ -18,10 +19,10 @@ public class MatchRound {
     private Integer matchId;
 
     @Column(name = "set_number")
-    private Integer setNumber; // 第几局
+    private Integer setNumber;
 
     @Column(name = "round_number")
-    private Integer roundNumber; // 第几回合
+    private Integer roundNumber;
 
     @Column(name = "score_a")
     private Integer scoreA;
@@ -35,89 +36,51 @@ public class MatchRound {
     @Column(name = "scorer_name")
     private String scorerName;
 
+    // ✅ 新增：为了解决 Controller 报错，必须加上这个字段
+    @Column(name = "winner_id")
+    private Integer winnerId;
+
     @Column(name = "score_time")
     private LocalDateTime scoreTime;
 
     @Column(name = "video_file_path")
     private String videoFilePath;
 
-    public Integer getRoundId() {
-        return roundId;
-    }
+    // ==========================================
+    // 手动 Getter / Setter 区域
+    // ==========================================
 
-    public void setRoundId(Integer roundId) {
-        this.roundId = roundId;
-    }
+    public Integer getRoundId() { return roundId; }
+    public void setRoundId(Integer roundId) { this.roundId = roundId; }
 
-    public Integer getMatchId() {
-        return matchId;
-    }
+    public Integer getMatchId() { return matchId; }
+    public void setMatchId(Integer matchId) { this.matchId = matchId; }
 
-    public void setMatchId(Integer matchId) {
-        this.matchId = matchId;
-    }
+    public Integer getSetNumber() { return setNumber; }
+    public void setSetNumber(Integer setNumber) { this.setNumber = setNumber; }
 
-    public Integer getSetNumber() {
-        return setNumber;
-    }
+    public Integer getRoundNumber() { return roundNumber; }
+    public void setRoundNumber(Integer roundNumber) { this.roundNumber = roundNumber; }
 
-    public void setSetNumber(Integer setNumber) {
-        this.setNumber = setNumber;
-    }
+    public Integer getScoreA() { return scoreA; }
+    public void setScoreA(Integer scoreA) { this.scoreA = scoreA; }
 
-    public Integer getRoundNumber() {
-        return roundNumber;
-    }
+    public Integer getScoreB() { return scoreB; }
+    public void setScoreB(Integer scoreB) { this.scoreB = scoreB; }
 
-    public void setRoundNumber(Integer roundNumber) {
-        this.roundNumber = roundNumber;
-    }
+    public String getServerName() { return serverName; }
+    public void setServerName(String serverName) { this.serverName = serverName; }
 
-    public Integer getScoreA() {
-        return scoreA;
-    }
+    public String getScorerName() { return scorerName; }
+    public void setScorerName(String scorerName) { this.scorerName = scorerName; }
 
-    public void setScoreA(Integer scoreA) {
-        this.scoreA = scoreA;
-    }
+    // ✅ 新增 Getter/Setter
+    public Integer getWinnerId() { return winnerId; }
+    public void setWinnerId(Integer winnerId) { this.winnerId = winnerId; }
 
-    public Integer getScoreB() {
-        return scoreB;
-    }
+    public LocalDateTime getScoreTime() { return scoreTime; }
+    public void setScoreTime(LocalDateTime scoreTime) { this.scoreTime = scoreTime; }
 
-    public void setScoreB(Integer scoreB) {
-        this.scoreB = scoreB;
-    }
-
-    public String getServerName() {
-        return serverName;
-    }
-
-    public void setServerName(String serverName) {
-        this.serverName = serverName;
-    }
-
-    public String getScorerName() {
-        return scorerName;
-    }
-
-    public void setScorerName(String scorerName) {
-        this.scorerName = scorerName;
-    }
-
-    public LocalDateTime getScoreTime() {
-        return scoreTime;
-    }
-
-    public void setScoreTime(LocalDateTime scoreTime) {
-        this.scoreTime = scoreTime;
-    }
-
-    public String getVideoFilePath() {
-        return videoFilePath;
-    }
-
-    public void setVideoFilePath(String videoFilePath) {
-        this.videoFilePath = videoFilePath;
-    }
+    public String getVideoFilePath() { return videoFilePath; }
+    public void setVideoFilePath(String videoFilePath) { this.videoFilePath = videoFilePath; }
 }
