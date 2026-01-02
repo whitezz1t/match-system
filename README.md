@@ -4,7 +4,6 @@
 
 ---
 
-```markdown
 # 🏓 乒乓球比赛智能管理与回放系统 V1.0
 
 <div align="center">
@@ -58,7 +57,7 @@
 
 ### 方式一：Docker 一键部署 (推荐)
 
-```bash
+
 # 1. 克隆项目
 git clone [https://github.com/你的用户名/pingpong-match-system.git](https://github.com/你的用户名/pingpong-match-system.git)
 cd pingpong-match-system
