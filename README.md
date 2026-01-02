@@ -53,7 +53,7 @@
 
 ```bash
 # 1. 克隆项目 (请替换为你的实际仓库地址)
-git clone [https://github.com/YourUsername/pingpong-match-system.git](https://github.com/YourUsername/pingpong-match-system.git)
+git clone https://github.com/YourUsername/pingpong-match-system.git
 cd pingpong-match-system
 
 # 2. 启动服务 (自动构建镜像 + 启动 MySQL)
@@ -61,3 +61,163 @@ docker compose up -d
 
 # 3. 查看日志
 docker compose logs -f match-app
+```
+
+> **注意**：首次启动需等待 MySQL 初始化及 Maven 依赖下载，约需 2-5 分钟。
+
+### 方式二：本地开发运行
+
+**1. 后端 (Spring Boot)**
+
+```bash
+cd backend
+# 修改 src/main/resources/application.properties 中的数据库配置
+mvn spring-boot:run
+```
+
+**2. 前端 (Vue 3)**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 访问地址
+
+| 服务 | 地址 |
+| --- | --- |
+| 🌐 Web 记分牌 | http://localhost:8080 |
+| 📹 视频存储路径 | 默认为项目根目录下的 `/videos` |
+
+---
+
+## 📐 系统架构
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                        前端 (Vue 3 + Vite)                   │
+├───────────────┬───────────────┬───────────────┬─────────────┤
+│   Element UI  │    ECharts    │ MediaRecorder │    Axios    │
+├───────────────┴───────────────┴───────────────┴─────────────┤
+│                            HTTP / REST API                  │
+├─────────────────────────────────────────────────────────────┤
+│                     后端 (Spring Boot 3)                     │
+├───────────────┬───────────────┬───────────────┬─────────────┤
+│  Rule Engine  │  Video SVC    │   Match SVC   │  File I/O   │
+│ (规则判定引擎)  │ (视频流处理)   │ (赛事管理)     │ (静态映射)   │
+├───────────────┴───────────────┴───────────────┴─────────────┤
+│                        基础设施层                            │
+├───────────────────────────────┬─────────────────────────────┤
+│          MySQL 8.0            │       Local File System     │
+│       (结构化数据存储)          │        (.webm 视频存储)      │
+└───────────────────────────────┴─────────────────────────────┘
+```
+
+### 技术栈
+
+| 层级 | 技术 | 说明 |
+| --- | --- | --- |
+| **前端** | Vue 3, Vite | 响应式构建 |
+| **UI库** | Element Plus | 界面组件 |
+| **图表** | Apache ECharts | 数据可视化 |
+| **多媒体** | HTML5 Media API | 视频流捕获与切片 |
+| **后端** | Spring Boot 3 | 核心业务逻辑 |
+| **ORM** | Spring Data JPA | 数据库交互 |
+| **数据库** | MySQL 8.0 | 数据持久化 |
+| **部署** | Docker Compose | 容器编排 |
+
+---
+
+## 📖 API 文档
+
+### 核心接口说明
+
+#### 赛事管理
+
+| 方法 | 路径 | 描述 |
+| --- | --- | --- |
+| POST | `/api/matches/start` | 创建一场新比赛 |
+| GET | `/api/matches` | 获取比赛列表（支持筛选） |
+| GET | `/api/matches/{id}` | 获取比赛详情 |
+
+#### 记分与视频
+
+| 方法 | 路径 | 描述 |
+| --- | --- | --- |
+| POST | `/api/matches/{id}/score` | 记录得分 (触发规则引擎) |
+| POST | `/api/matches/{id}/rounds/{round}/video` | 上传该回合的关键帧视频 |
+| GET | `/api/matches/{id}/rounds` | 获取该场比赛的所有回合记录 |
+
+#### 统计分析
+
+| 方法 | 路径 | 描述 |
+| --- | --- | --- |
+| GET | `/api/matches/{id}/stats` | 获取发球胜率、连胜统计等 |
+
+---
+
+## 🐳 部署配置
+
+### Docker 环境变量 (.env)
+
+你可以创建 `.env` 文件来覆盖默认配置：
+
+```ini
+# 数据库配置
+MYSQL_ROOT_PASSWORD=root
+MYSQL_DATABASE=match_db
+
+# 应用配置
+# 如果使用 USB 采集卡，建议在浏览器端选择设备，此处无需配置
+```
+
+### 挂载卷说明
+
+在 `compose.yml` 中，我们定义了以下挂载：
+
+* `./videos:/app/videos`: 将容器内录制的视频同步保存到宿主机，确保容器删除后视频不丢失。
+* `./init.sql:/docker-entrypoint-initdb.d/init.sql`: 容器首次启动时自动初始化的 SQL 脚本。
+
+---
+
+## 📁 项目结构
+
+```text
+pingpong-match-system/
+├── backend/            # Spring Boot 后端源码
+│   ├── src/main/java/com/example/match
+│   └── src/main/resources
+├── frontend/           # Vue 3 前端源码
+│   ├── src/components/Scoreboard.vue  # 核心记分组件
+│   └── src/views/MatchList.vue
+├── videos/             # [自动生成] 存放录制的比赛视频
+├── compose.yml         # Docker 一键启动配置
+├── Dockerfile          # 后端镜像构建文件
+├── init.sql            # 数据库初始化脚本
+└── README.md           # 项目文档
+```
+
+---
+
+## 🔧 常见问题
+
+**Q: 视频录制只有声音没有画面？**
+A: 请确保浏览器已授予摄像头权限。如果是笔记本连接外接采集卡，请在页面顶部的下拉框中切换摄像头设备。
+
+**Q: 视频无法播放或显示文件损坏？**
+A: 系统采用了“单回合单文件”的切片策略，请确保不要在2秒内连续点击得分，系统需要时间生成关键帧头文件。
+
+---
+
+## 📄 许可证
+
+MIT License © 2026
+
+---
+
+<div align="center">
+
+**Ping Pong Match System** | Made with ❤️ by YourName
+
+</div>
