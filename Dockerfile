@@ -1,18 +1,38 @@
-# 1. 基础镜像：使用 OpenJDK 17 (根据你的 SpringBoot 版本选择，通常是 17)
+# ============================
+# 第一阶段：在 Docker 里面构建 JAR 包
+# ============================
+# 使用官方 Maven 镜像 (自带 JDK)
+FROM maven:3.9-eclipse-temurin-22 AS builder
+
+# 设置工作目录
+WORKDIR /build
+
+# 1. 只是单独复制 pom.xml 并下载依赖
+# (这一步是为了利用 Docker 缓存，如果源码变了但依赖没变，就不用重新下载 jar 包)
+COPY backend/pom.xml .
+# 注意：因为你的 pom.xml 可能在 backend 目录下，要根据实际路径调整
+RUN mvn dependency:go-offline -B
+
+# 2. 复制源代码
+COPY backend/src ./src
+
+# 3. 执行打包 (生成 jar)
+RUN mvn clean package -DskipTests
+
+
+# ============================
+# 第二阶段：运行 (和你原来的几乎一样)
+# ============================
 FROM openjdk:22-jdk-slim
 
-# 2. 设置容器内的工作目录
 WORKDIR /app
 
-# 3. 将本地构建好的 JAR 包复制到容器内的 /app 目录下，并重命名为 app.jar
-# 注意：这里的路径要根据你 Dockerfile 所在的位置相对于 jar 包的位置来写
-COPY backend/target/match-system-0.0.1-SNAPSHOT.jar app.jar
+# 【关键变化】
+# 这里不再是从你电脑(宿主机)复制，而是从“第一阶段(builder)”那里复制生成的 jar
+COPY --from=builder /build/target/*.jar app.jar
 
-# 4. 创建一个用于存放视频的目录 (为了防止权限问题)
 RUN mkdir videos
 
-# 5. 暴露端口 (告诉 Docker 这个容器会用 8080)
 EXPOSE 8080
 
-# 6. 启动命令
 ENTRYPOINT ["java", "-jar", "app.jar"]
