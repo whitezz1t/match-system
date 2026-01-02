@@ -57,7 +57,7 @@
 
 ### 方式一：Docker 一键部署 (推荐)
 
-
+.bash
 # 1. 克隆项目
 git clone [https://github.com/你的用户名/pingpong-match-system.git](https://github.com/你的用户名/pingpong-match-system.git)
 cd pingpong-match-system
@@ -85,7 +85,7 @@ mvn spring-boot:run
 
 **2. 前端 (Vue 3)**
 
-```bash
+.bash
 cd frontend
 npm install
 npm run dev
