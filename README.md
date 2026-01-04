@@ -1,16 +1,27 @@
+这份 README 已经很不错了，但根据我们刚才解决的一系列深度技术问题（特别是 Docker 环境下的**架构变更**、**硬件延迟修复**、**时区问题**和**静态资源映射**），我们需要对文档进行关键性的更新。
+
+以下是优化后的版本。主要变化包括：
+
+1. **架构图更新**：反映了“Vue + Spring Boot 合并部署”的单容器架构。
+2. **部署指南增强**：增加了清理旧容器和处理数据库缓存的步骤（这是你遇到的最大坑）。
+3. **配置说明**：补充了时区（TZ）和端口映射的说明。
+4. **常见问题**：加入了针对 Docker on Windows 硬件延迟的解释。
+
+---
+
 # 🏓 乒乓球比赛智能管理与回放系统 V1.0
 
 <div align="center">
 
-![Java](https://img.shields.io/badge/Java-17-orange.svg)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0+-green.svg)
-![Vue](https://img.shields.io/badge/Vue.js-3.0-42b883.svg)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ed.svg)
-
 **集智能记分、鹰眼回放、数据分析于一体的现代化赛事管理平台**
 
-[功能特性](#-功能特性) • [快速开始](#-快速开始) • [系统架构](#-系统架构) • [API 文档](#-api-文档) • [部署指南](#-部署指南)
+
+
+
+
+*专为 Docker 环境优化，解决硬件录制延迟与跨平台部署难题*
+
+[功能特性](https://www.google.com/search?q=%23-%E5%8A%9F%E8%83%BD%E7%89%B9%E6%80%A7) • [系统架构](https://www.google.com/search?q=%23-%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84) • [快速开始](https://www.google.com/search?q=%23-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B) • [部署指南](https://www.google.com/search?q=%23-%E9%83%A8%E7%BD%B2%E6%8C%87%E5%8D%97) • [常见问题](https://www.google.com/search?q=%23-%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98)
 
 </div>
 
@@ -19,24 +30,51 @@
 ## ✨ 功能特性
 
 ### ⏱️ 智能裁判引擎
-- **规则自动化**：内置乒乓球国际规则，自动判断发球权轮换（2球/1球）、追分（Deuce）逻辑及胜负判定。
-- **状态管理**：支持比赛暂停、中断恢复，实时显示当前发球方与局点提示。
-- **防误触机制**：记分操作具备“冷却锁”功能，防止连点导致数据错误。
 
-### 📹 鹰眼视频回放
-- **自动切片录制**：基于 `MediaRecorder` 的切片录制技术，自动记录“上一分结束”至“本回合得分后2秒”的完整片段。
-- **零人工干预**：裁判仅需点击加分，系统后台自动完成视频截取、上传与存储。
-- **即时回看**：支持比赛过程中随时点击历史回合，弹窗回放精彩得分瞬间。
-- **多设备支持**：支持调用系统默认摄像头或 USB 外接高清采集卡。
+* **规则自动化**：内置乒乓球国际规则，自动判断发球权轮换（2球/1球）、追分（Deuce）及胜负。
+* **状态管理**：支持比赛暂停、中断恢复，防误触“冷却锁”机制。
 
-### 📊 数据可视化分析
-- **比分走势图**：实时绘制 ECharts 折线图，复盘比赛胶着程度。
-- **战术统计**：自动计算发球得分率、最大连胜回数（Streak）、平均回合时长。
-- **历史归档**：完整保存每场比赛的逐球记录与视频档案，支持 Excel 导出。
+### 📹 鹰眼视频回放 (Docker 增强版)
 
-### 🐳 全栈容器化
-- **一键部署**：前后端与数据库完全容器化，通过 Docker Compose 一键启动。
-- **数据持久化**：视频文件与数据库数据挂载至宿主机，防止数据丢失。
+* **智能切片**：自动截取“得分前后”的高光时刻，生成独立 WebM/MP4 文件。
+* **硬件防抖动**：针对 Docker on Windows/Linux 的硬件资源释放延迟，内置智能排队与延时机制，确保连续得分录制不丢包。
+* **即时回看**：前端通过静态资源映射直接回放录像，无需额外的文件服务器。
+
+### 📊 数据可视化与导出
+
+* **图表分析**：集成 ECharts 比分走势图。
+* **Excel 导出**：自动修正 Docker 容器时区偏差（UTC -> CST），确保导出的比赛时间准确无误。
+
+### 🐳 极简单容器架构
+
+* **合并部署**：彻底抛弃 Nginx，前端构建产物（Dist）直接嵌入 Spring Boot，解决 CORS 跨域问题。
+* **零配置启动**：仅需两个容器（App + DB）即可运行完整系统。
+
+---
+
+## 📐 系统架构
+
+本系统采用 **Spring Boot + Vue 合并部署** 策略，简化了运维复杂度：
+
+```text
+Host (宿主机 Windows/Linux)
+│
+├─ [Docker Container: match-app] (Port: 8080) ──────────────┐
+│  │                                                        │
+│  ├─ [Web Layer] Spring Boot Tomcat                        │
+│  │   ├─ / (Root) -> 转发 index.html (Vue SPA)             │
+│  │   ├─ /api/** -> 业务接口 REST API                     │
+│  │   └─ /videos/** -> 映射宿主机挂载的视频目录             │
+│  │                                                        │
+│  ├─ [Service Layer] 业务逻辑 & FFmpeg 调用控制             │
+│  └─ [Resource] 字体库 (FontConfig) & 静态网页              │
+│                                                        │
+└──────────────────────────┬────────────────────────────────┘
+                           │ JDBC (Port: 3306)
+                           ▼
+   [Docker Container: match-db] (MySQL 8.0)
+
+```
 
 ---
 
@@ -44,180 +82,81 @@
 
 ### 环境要求
 
-- Java 17+
-- Node.js 16+ (用于前端开发)
-- Docker & Docker Compose (推荐)
-- 摄像头 (笔记本自带或外接 USB)
+* Docker & Docker Compose
+* 摄像头 (USB外接或内置)
+* **注意**：本项目已配置 `TZ=Asia/Shanghai`，无需手动调整宿主机时区。
 
-### 方式一：Docker 一键部署 (推荐)
+### ✅ 生产环境部署 (Docker Compose)
+
+这是最推荐的方式，直接运行即可。
 
 ```bash
-# 1. 克隆项目 (请替换为你的实际仓库地址)
+# 1. 克隆项目
 git clone https://github.com/YourUsername/pingpong-match-system.git
 cd pingpong-match-system
 
-# 2. 启动服务 (自动构建镜像 + 启动 MySQL)
-docker compose up -d
+# 2. (可选) 如果之前运行过旧版本，建议先清理环境，防止端口/命名冲突
+docker rm -f match-app match-db match-web
 
-# 3. 查看日志
-docker compose logs -f match-app
-```
+# 3. 一键构建并启动
+docker compose up -d --build
 
-> **注意**：首次启动需等待 MySQL 初始化及 Maven 依赖下载，约需 2-5 分钟。
+# 4. 查看运行状态
+docker ps
+# 应只显示 match-app (8080端口) 和 match-db (3307端口)
 
-### 方式二：本地开发运行
-
-**1. 后端 (Spring Boot)**
-
-```bash
-cd backend
-# 修改 src/main/resources/application.properties 中的数据库配置
-mvn spring-boot:run
-```
-
-**2. 前端 (Vue 3)**
-
-```bash
-cd frontend
-npm install
-npm run dev
 ```
 
 ### 访问地址
 
-| 服务 | 地址 |
-| --- | --- |
-| 🌐 Web 记分牌 | http://localhost:8080 |
-| 📹 视频存储路径 | 默认为项目根目录下的 `/videos` |
-
----
-
-## 📐 系统架构
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                        前端 (Vue 3 + Vite)                   │
-├───────────────┬───────────────┬───────────────┬─────────────┤
-│   Element UI  │    ECharts    │ MediaRecorder │    Axios    │
-├───────────────┴───────────────┴───────────────┴─────────────┤
-│                            HTTP / REST API                  │
-├─────────────────────────────────────────────────────────────┤
-│                     后端 (Spring Boot 3)                     │
-├───────────────┬───────────────┬───────────────┬─────────────┤
-│  Rule Engine  │  Video SVC    │   Match SVC   │  File I/O   │
-│ (规则判定引擎)  │ (视频流处理)   │ (赛事管理)     │ (静态映射)   │
-├───────────────┴───────────────┴───────────────┴─────────────┤
-│                        基础设施层                            │
-├───────────────────────────────┬─────────────────────────────┤
-│          MySQL 8.0            │       Local File System     │
-│       (结构化数据存储)          │        (.webm 视频存储)      │
-└───────────────────────────────┴─────────────────────────────┘
-```
-
-### 技术栈
-
-| 层级 | 技术 | 说明 |
+| 服务 | 地址 | 说明 |
 | --- | --- | --- |
-| **前端** | Vue 3, Vite | 响应式构建 |
-| **UI库** | Element Plus | 界面组件 |
-| **图表** | Apache ECharts | 数据可视化 |
-| **多媒体** | HTML5 Media API | 视频流捕获与切片 |
-| **后端** | Spring Boot 3 | 核心业务逻辑 |
-| **ORM** | Spring Data JPA | 数据库交互 |
-| **数据库** | MySQL 8.0 | 数据持久化 |
-| **部署** | Docker Compose | 容器编排 |
+| 🌐 **Web 系统** | `http://localhost:8080` | 记分与回放主界面 |
+| 🗄️ **数据库** | `localhost:3307` | 用户: root / 密码: root |
 
 ---
 
-## 📖 API 文档
+## 📁 目录与挂载说明
 
-### 核心接口说明
-
-#### 赛事管理
-
-| 方法 | 路径 | 描述 |
+| 宿主机路径 | 容器内路径 | 说明 |
 | --- | --- | --- |
-| POST | `/api/matches/start` | 创建一场新比赛 |
-| GET | `/api/matches` | 获取比赛列表（支持筛选） |
-| GET | `/api/matches/{id}` | 获取比赛详情 |
-
-#### 记分与视频
-
-| 方法 | 路径 | 描述 |
-| --- | --- | --- |
-| POST | `/api/matches/{id}/score` | 记录得分 (触发规则引擎) |
-| POST | `/api/matches/{id}/rounds/{round}/video` | 上传该回合的关键帧视频 |
-| GET | `/api/matches/{id}/rounds` | 获取该场比赛的所有回合记录 |
-
-#### 统计分析
-
-| 方法 | 路径 | 描述 |
-| --- | --- | --- |
-| GET | `/api/matches/{id}/stats` | 获取发球胜率、连胜统计等 |
+| `./videos` | `/app/videos` | **视频存档**：自动同步，删除容器后视频不丢失 |
+| `./mysql_data` | `/var/lib/mysql` | **数据库文件**：持久化存储，若需重置数据库请删除此文件夹 |
+| `./logs` | `/app/logs` | **运行日志**：排查 FFmpeg 报错或系统异常 |
 
 ---
 
-## 🐳 部署配置
+## 🔧 常见问题 (Troubleshooting)
 
-### Docker 环境变量 (.env)
+### Q1: 为什么连续得分时，中间几回合的视频没录上？
 
-你可以创建 `.env` 文件来覆盖默认配置：
+**A:** 这是 Docker 在 Windows/Linux 上对 USB 设备的释放延迟导致的。
+**解决方案**：系统已在 `MatchService` 中内置了 `1.5秒` 的强制等待逻辑。请确保不要修改代码中的 `Thread.sleep(1500)`，这是为了等待硬件释放文件锁。
 
-```ini
-# 数据库配置
-MYSQL_ROOT_PASSWORD=root
-MYSQL_DATABASE=match_db
+### Q2: 网页能看到视频文件存在，但点击回放报 404？
 
-# 应用配置
-# 如果使用 USB 采集卡，建议在浏览器端选择设备，此处无需配置
-```
+**A:** 这是一个路径映射问题。
+**解决方案**：本项目使用了 `WebConfig` 自动识别环境。
 
-### 挂载卷说明
+* 在 Docker 中，它会自动映射 `file:/app/videos/`。
+* 请检查数据库 `video_file_path` 字段，确保存储的是**纯文件名** (如 `round_1.mp4`) 而不是绝对路径。
 
-在 `compose.yml` 中，我们定义了以下挂载：
+### Q3: 导出的 Excel 时间慢了 8 小时？
 
-* `./videos:/app/videos`: 将容器内录制的视频同步保存到宿主机，确保容器删除后视频不丢失。
-* `./init.sql:/docker-entrypoint-initdb.d/init.sql`: 容器首次启动时自动初始化的 SQL 脚本。
+**A:** Docker 容器默认使用 UTC 时间。
+**解决方案**：`compose.yml` 已配置 `TZ=Asia/Shanghai` 环境变量，重启容器后导出的时间即为北京时间。
 
----
+### Q4: 数据库修改了 init.sql 但不生效？
 
-## 📁 项目结构
+**A:** Docker 只有在数据目录为空时才会执行初始化脚本。
+**解决方案**：
 
-```text
-pingpong-match-system/
-├── backend/            # Spring Boot 后端源码
-│   ├── src/main/java/com/example/match
-│   └── src/main/resources
-├── frontend/           # Vue 3 前端源码
-│   ├── src/components/Scoreboard.vue  # 核心记分组件
-│   └── src/views/MatchList.vue
-├── videos/             # [自动生成] 存放录制的比赛视频
-├── compose.yml         # Docker 一键启动配置
-├── Dockerfile          # 后端镜像构建文件
-├── init.sql            # 数据库初始化脚本
-└── README.md           # 项目文档
-```
-
----
-
-## 🔧 常见问题
-
-**Q: 视频录制只有声音没有画面？**
-A: 请确保浏览器已授予摄像头权限。如果是笔记本连接外接采集卡，请在页面顶部的下拉框中切换摄像头设备。
-
-**Q: 视频无法播放或显示文件损坏？**
-A: 系统采用了“单回合单文件”的切片策略，请确保不要在2秒内连续点击得分，系统需要时间生成关键帧头文件。
+1. `docker compose down`
+2. **手动删除根目录下的 `mysql_data` 文件夹**
+3. `docker compose up -d`
 
 ---
 
 ## 📄 许可证
 
 MIT License © 2026
-
----
-
-<div align="center">
-
-**Ping Pong Match System** | Made with ❤️ by YourName
-
-</div>
