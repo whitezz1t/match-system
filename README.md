@@ -12,7 +12,6 @@
 
 **集智能记分、鹰眼回放、数据分析于一体的现代化赛事管理平台**
 <br>
-*专为 Docker 环境优化，解决硬件录制延迟与跨平台部署难题*
 
 [功能特性](#-功能特性) • [快速开始](#-快速开始) • [系统架构](#-系统架构) • [API 文档](#-api-文档) • [部署指南](#-部署指南) • [常见问题](#-常见问题)
 
@@ -38,9 +37,6 @@
 - **战术统计**：自动计算发球得分率、最大连胜回数（Streak）、平均回合时长。
 - **历史归档**：完整保存每场比赛的逐球记录与视频档案，支持 Excel 导出（自动修正容器时区偏差）。
 
-### 🐳 极简单容器架构
-- **合并部署**：前端构建产物（Dist）直接嵌入 Spring Boot，解决 CORS 跨域问题。
-- **零配置启动**：仅需两个容器（App + DB）即可运行完整系统，彻底抛弃 Nginx 依赖。
 
 ---
 
@@ -57,7 +53,7 @@
 
 ```bash
 # 1. 克隆项目
-git clone [https://github.com/whitezz1t/match-system](https://github.com/whitezz1t/match-system)
+git clone https://github.com/whitezz1t/match-system
 cd match-system
 
 # 2. (可选) 清理旧环境，防止端口/命名冲突
