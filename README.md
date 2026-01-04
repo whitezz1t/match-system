@@ -114,27 +114,7 @@ npm run dev
 
 ---
 
-## 📐 系统架构
 
-```text
-Host (宿主机 Windows/Linux)
-│
-├─ [Docker Container: match-app] (Port: 8080) ──────────────┐
-│  │                                                        │
-│  ├─ [Web Layer] Spring Boot Tomcat                        │
-│  │   ├─ / (Root) -> 转发 index.html (Vue SPA)             │
-│  │   ├─ /api/** -> 业务接口 REST API                      │
-│  │   └─ /videos/** -> 映射宿主机挂载的视频目录              │
-│  │                                                        │
-│  ├─ [Service Layer] 业务逻辑 & FFmpeg 调用控制              │
-│  └─ [Resource] 字体库 (FontConfig) & 静态网页               │
-│                                                         │
-└──────────────────────────┬────────────────────────────────┘
-                           │ JDBC (Port: 3306)
-                           ▼
-   [Docker Container: match-db] (MySQL 8.0)
-
-```
 
 ### 技术栈
 
