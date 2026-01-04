@@ -156,17 +156,7 @@ npm run dev
 
 ---
 
-## 🐳 部署配置
 
-### 环境变量与挂载
-
-在 `compose.yml` 中，我们要特别注意以下配置：
-
-* **`TZ=Asia/Shanghai`**: 强制容器使用北京时间，解决导出的 Excel 时间偏差 8 小时的问题。
-* **`./videos:/app/videos`**: 将容器内录制的视频同步保存到宿主机，删除容器后视频依然保留。
-* **`./init.sql:/docker-entrypoint-initdb.d/init.sql`**: 数据库初始化脚本。
-
----
 
 ## 📁 项目结构
 
