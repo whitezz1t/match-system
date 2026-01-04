@@ -4,21 +4,24 @@ services:
   # === 1. 前端服务 (Nginx + Vue) ===
   match-web:
     build:
-      context: ./frontend  # 指定去 frontend 目录找 Dockerfile
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: match-web
     ports:
-      - "80:80"  # 浏览器直接访问 localhost (无需加端口)
+      - "80:80"
     depends_on:
-      - match-app # 等后端启动了再启动前端
+      - match-app
+    # 👇👇👇 【核心修改：新增下面这两行】 👇👇👇
+    volumes:
+      # 将宿主机的 ./videos 映射到 Nginx 的网页根目录下的 videos 文件夹
+      # 这样 Nginx 就能直接通过 http://localhost/videos/xxx.mp4 访问到文件了
+      - ./videos:/usr/share/nginx/html/videos
     restart: always
 
   # === 2. 后端服务 (Spring Boot) ===
   match-app:
-    build: .  # 读取根目录的 Dockerfile (后端)
+    build: .
     container_name: match-app
-    # 注意：现在不需要把 8080 映射给宿主机了，因为 Nginx 会通过内部网络访问它
-    # 但为了方便调试，保留也没关系，或者改成暴露出来给 Postman 用
     ports:
       - "8080:8080"
     environment:
@@ -26,6 +29,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
     volumes:
+      # 后端负责把录制好的视频“写”进这里
       - ./videos:/app/videos
       - ./logs:/app/logs
     depends_on:

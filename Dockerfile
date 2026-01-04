@@ -1,35 +1,54 @@
-# ============================
-# 第一阶段：在 Docker 里面构建 JAR 包
-# ============================
-# 使用官方 Maven 镜像 (自带 JDK)
-FROM maven:3.9-eclipse-temurin-22 AS builder
+# ==========================================
+# 阶段一：前端构建 (Node.js)
+# ==========================================
+FROM node:22 AS frontend-builder
+WORKDIR /app_web
+# 复制前端依赖配置
+COPY frontend/package*.json ./
+# 安装前端依赖
+RUN npm install
+# 复制前端源码
+COPY frontend/ .
+# 打包生成 dist 目录
+RUN npm run build
 
-# 设置工作目录
+
+# ==========================================
+# 阶段二：后端构建 (Maven)
+# ==========================================
+FROM maven:3.9-eclipse-temurin-22 AS backend-builder
 WORKDIR /build
 
-# 1. 只是单独复制 pom.xml 并下载依赖
-# (这一步是为了利用 Docker 缓存，如果源码变了但依赖没变，就不用重新下载 jar 包)
+# 1. 下载后端依赖
 COPY backend/pom.xml .
-# 注意：因为你的 pom.xml 可能在 backend 目录下，要根据实际路径调整
 RUN mvn dependency:go-offline -B
 
-# 2. 复制源代码
+# 2. 复制后端源码
 COPY backend/src ./src
 
-# 3. 执行打包 (生成 jar)
+# ⭐⭐ 关键步骤：把前端打包好的 dist 放到 Spring Boot 的静态资源目录下 ⭐⭐
+# Spring Boot 默认会从 src/main/resources/static 找网页
+COPY --from=frontend-builder /app_web/dist ./src/main/resources/static
+
+# 3. 打包后端 (这时候 Jar 包里已经包含了前端网页)
 RUN mvn clean package -DskipTests
 
 
-# ============================
-# 第二阶段：运行 (和你原来的几乎一样)
-# ============================
+# ==========================================
+# 阶段三：运行 (最终镜像)
+# ==========================================
 FROM openjdk:22-jdk-slim
+
+# 安装字体库 (解决 Excel 导出为空的问题)
+RUN apt-get update && apt-get install -y \
+    fontconfig \
+    libfreetype6 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# 【关键变化】
-# 这里不再是从你电脑(宿主机)复制，而是从“第一阶段(builder)”那里复制生成的 jar
-COPY --from=builder /build/target/*.jar app.jar
+# 从阶段二复制打包好的 Jar
+COPY --from=backend-builder /build/target/*.jar app.jar
 
 RUN mkdir videos
 
