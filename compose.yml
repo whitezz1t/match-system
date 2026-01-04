@@ -8,7 +8,7 @@ services:
     container_name: match-app
     # ⭐ 核心修改：把 80 端口直接映射给 Java (容器内的 8080)
     ports:
-      - "80:8080"
+      - "8080:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/match_db?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=utf8
       - SPRING_DATASOURCE_USERNAME=root
