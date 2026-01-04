@@ -1,35 +1,20 @@
 version: '3.8'
 
 services:
-  # === 1. 前端服务 (Nginx + Vue) ===
-  match-web:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: match-web
-    ports:
-      - "80:80"
-    depends_on:
-      - match-app
-    # 👇👇👇 【核心修改：新增下面这两行】 👇👇👇
-    volumes:
-      # 将宿主机的 ./videos 映射到 Nginx 的网页根目录下的 videos 文件夹
-      # 这样 Nginx 就能直接通过 http://localhost/videos/xxx.mp4 访问到文件了
-      - ./videos:/usr/share/nginx/html/videos
-    restart: always
-
-  # === 2. 后端服务 (Spring Boot) ===
+  # === 1. 后端服务 (已包含前端 Vue) ===
   match-app:
+    # 这里的 build . 会使用那个 "3阶段构建" 的 Dockerfile
     build: .
     container_name: match-app
+    # ⭐ 核心修改：把 80 端口直接映射给 Java (容器内的 8080)
     ports:
-      - "8080:8080"
+      - "80:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/match_db?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=utf8
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
     volumes:
-      # 后端负责把录制好的视频“写”进这里
+      # 视频依然存放在本地，方便查看
       - ./videos:/app/videos
       - ./logs:/app/logs
     depends_on:
@@ -37,7 +22,7 @@ services:
         condition: service_healthy
     restart: always
 
-  # === 3. 数据库服务 ===
+  # === 2. 数据库服务 (保持不变) ===
   db:
     image: mysql:8.0
     container_name: match-db
